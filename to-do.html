@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI-Smart To-Do</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0f1220;
+        --panel: #151a2e;
+        --panel-2: #1b2240;
+        --text: #e8ecff;
+        --muted: #9aa3c1;
+        --accent: #6c7cff;
+        --accent-2: #12c2e9;
+        --danger: #ff6b6b;
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --ring: 0 0 0 3px rgba(108, 124, 255, 0.35);
+      }
+      /* Light mode tokens */
+      :root.light {
+        --bg: #f7f8fe;
+        --panel: #ffffff;
+        --panel-2: #eef1ff;
+        --text: #0d1321;
+        --muted: #586079;
+        --accent: #3f57ff;
+        --accent-2: #0ea5e9;
+        --danger: #e11d48;
+        --success: #16a34a;
+        --warning: #b45309;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto,
+          Helvetica, Arial, sans-serif;
+        background: linear-gradient(180deg, var(--bg), #0a0c18 60%);
+        color: var(--text);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        align-items: center;
+      }
+      .title {
+        font-size: clamp(22px, 3.5vw, 34px);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      .subtitle {
+        color: var(--muted);
+        font-size: 14px;
+        margin-top: 6px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .btn {
+        background: var(--panel-2);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        padding: 10px 14px;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s;
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+      }
+      .btn.primary {
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        border: none;
+        color: white;
+      }
+      .btn.danger {
+        background: linear-gradient(135deg, #ff6b6b, #f43f5e);
+        border: none;
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 18px;
+        margin-top: 18px;
+      }
+      @media (max-width: 920px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: radial-gradient(
+            1200px 400px at top right,
+            rgba(108, 124, 255, 0.12),
+            transparent 40%
+          ),
+          var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      }
+      .card h3 {
+        margin: 0 0 12px;
+        font-size: 16px;
+        color: var(--muted);
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      .input-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+      }
+      .textbox {
+        width: 100%;
+        padding: 14px 14px;
+        border-radius: 14px;
+        background: var(--panel-2);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        outline: none;
+        font-size: 15px;
+      }
+      .textbox:focus {
+        box-shadow: var(--ring);
+        border-color: transparent;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .chip {
+        padding: 8px 10px;
+        font-size: 12px;
+        background: rgba(108, 124, 255, 0.15);
+        border: 1px solid rgba(108, 124, 255, 0.35);
+        color: var(--text);
+        border-radius: 999px;
+        cursor: pointer;
+      }
+
+      .filters {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .select,
+      .smallbox {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: var(--panel-2);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        outline: none;
+        font-size: 14px;
+      }
+
+      .list {
+        display: grid;
+        gap: 10px;
+      }
+      .task {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px;
+        border-radius: 16px;
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.02),
+            transparent 30%
+          ),
+          var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .task.dragging {
+        outline: 2px dashed var(--accent);
+        opacity: 0.8;
+      }
+      .task .title {
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .meta {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .pill {
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .pill.deadline {
+        background: rgba(255, 196, 0, 0.12);
+        border-color: rgba(255, 196, 0, 0.35);
+      }
+      .pill.overdue {
+        background: rgba(255, 0, 0, 0.12);
+        border-color: rgba(255, 0, 0, 0.35);
+      }
+      .pill.success {
+        background: rgba(16, 185, 129, 0.12);
+        border-color: rgba(16, 185, 129, 0.35);
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+      .iconbtn {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--text);
+        padding: 6px 8px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      .iconbtn:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      @media (max-width: 640px) {
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .stat {
+        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 12px;
+        text-align: center;
+      }
+      .stat .big {
+        font-size: 28px;
+        font-weight: 800;
+      }
+
+      canvas {
+        width: 100%;
+        height: 160px;
+        border-radius: 14px;
+        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .hint {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .calendar-container {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+        background: #1e1e2f;
+        padding: 10px;
+        border-radius: 8px;
+      }
+
+      .calendar-header {
+        grid-column: span 7;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+        color: white;
+      }
+
+      .calendar-header button {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+      }
+
+      .calendar-day {
+        text-align: center;
+        padding: 5px;
+        border-radius: 4px;
+        cursor: pointer;
+        color: #ddd;
+      }
+
+      .calendar-day:hover {
+        background: #4f46e5;
+        color: white;
+      }
+
+      .calendar-day.disabled {
+        color: #555;
+        cursor: not-allowed;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div>
+          <div class="title">AI-Smart To-Dos</div>
+          <!-- <div class="subtitle">Type naturally: <em>“Finish JS project by Monday 5pm high #study”</em> • voice input • drag to sort • smart suggestions</div> -->
+        </div>
+        <div class="controls">
+          <button class="btn" id="voiceBtn">🎙️ Voice</button>
+          <button class="btn" id="notifyBtn">🔔 Notifications</button>
+          <button class="btn" id="themeBtn">🌗 Theme</button>
+          <button class="btn danger" id="wipeBtn">🗑️ Reset</button>
+        </div>
+      </header>
+
+      <main>
+        <section class="card">
+          <h3>Add Task (AI Input)</h3>
+          <div class="input-row">
+            <input
+              id="taskInput"
+              class="textbox"
+              placeholder="e.g., Submit assignment by Fri 6pm high #college"
+            />
+            <button id="addBtn" class="btn primary">Add</button>
+          </div>
+
+          <div class="task-input">
+            <div id="calendar"></div>
+          </div>
+
+          <div class="chips" id="suggestChips"></div>
+          <p class="hint">
+            Hints: words like
+            <strong>today, tomorrow, next mon, in 2d, at 5pm, by 20 Aug</strong
+            >. Priorities: <strong>low, med, high</strong>. Add category with
+            <strong>#tag</strong>.
+          </p>
+
+          <div class="row" style="margin-top: 12px">
+            <div>
+              <h3>Filters</h3>
+              <div class="filters">
+                <select id="filterStatus" class="select">
+                  <option value="all">All</option>
+                  <option value="open">Open</option>
+                  <option value="done">Completed</option>
+                </select>
+                <select id="filterPriority" class="select">
+                  <option value="all">Priority</option>
+                  <option value="high">High</option>
+                  <option value="med">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+                <select id="filterCategory" class="select">
+                  <option value="all">Any Category</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <h3>Search</h3>
+              <input
+                id="searchBox"
+                class="smallbox"
+                placeholder="Find tasks..."
+              />
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Your Tasks</h3>
+          <div class="list" id="taskList"></div>
+        </section>
+      </main>
+
+      <section class="card" style="margin-top: 18px">
+        <h3>Productivity</h3>
+        <div class="stats">
+          <div class="stat">
+            <div class="big" id="statOpen">0</div>
+            <div class="muted">Open</div>
+          </div>
+          <div class="stat">
+            <div class="big" id="statDone">0</div>
+            <div class="muted">Completed</div>
+          </div>
+          <div class="stat">
+            <div class="big" id="statStreak">0🔥</div>
+            <div class="muted">Daily Streak</div>
+          </div>
+        </div>
+        <canvas id="chart"></canvas>
+      </section>
+    </div>
+
+    <template id="taskTemplate">
+      <div class="task" draggable="true">
+        <input type="checkbox" class="toggle" />
+        <div>
+          <div class="title"></div>
+          <div class="muted"></div>
+          <div class="meta"></div>
+        </div>
+        <div class="actions">
+          <button class="iconbtn edit">✏️</button>
+          <button class="iconbtn del">🗑️</button>
+        </div>
+      </div>
+    </template>
+
+    <script>
+      // ===== Utilities =====
+      const $ = (sel, root = document) => root.querySelector(sel);
+      const $$ = (sel, root = document) =>
+        Array.from(root.querySelectorAll(sel));
+      const uid = () => Math.random().toString(36).slice(2, 9);
+
+      const store = {
+        key: "aismart.todo.v1",
+        read() {
+          try {
+            return (
+              JSON.parse(localStorage.getItem(this.key)) || {
+                tasks: [],
+                order: [],
+                prefs: { theme: "dark", streak: 0, lastCompleteDay: null },
+                history: [],
+              }
+            );
+          } catch {
+            return {
+              tasks: [],
+              order: [],
+              prefs: { theme: "dark" },
+              history: [],
+            };
+          }
+        },
+        write(data) {
+          localStorage.setItem(this.key, JSON.stringify(data));
+        },
+      };
+
+      const state = store.read();
+
+      // ===== Theme =====
+      function applyTheme() {
+        const root = document.documentElement;
+        if ((state.prefs?.theme || "dark") === "light")
+          root.classList.add("light");
+        else root.classList.remove("light");
+      }
+      applyTheme();
+
+      // ===== Natural Language Parser (simple) =====
+      function parseInput(text) {
+        const original = text.trim();
+        let title = original;
+        let priority = "med";
+        let category = "general";
+        let due = null;
+
+        // category hashtags
+        const tags = [...title.matchAll(/#([\p{L}\d_-]+)/gu)].map((m) =>
+          m[1].toLowerCase()
+        );
+        if (tags[0]) category = tags[0];
+        title = title.replace(/#[\p{L}\d_-]+/gu, "").trim();
+
+        // priority words
+        if (/\b(high|urgent|critical|important)\b/i.test(title)) {
+          priority = "high";
+          title = title
+            .replace(/\b(high|urgent|critical|important)\b/gi, "")
+            .trim();
+        } else if (/\b(low|chill|later)\b/i.test(title)) {
+          priority = "low";
+          title = title.replace(/\b(low|chill|later)\b/gi, "").trim();
+        } else if (/\b(med|medium|normal)\b/i.test(title)) {
+          priority = "med";
+          title = title.replace(/\b(med|medium|normal)\b/gi, "").trim();
+        }
+
+        // relative days
+        const now = new Date();
+        const setTime = (d, h = 9, m = 0) => {
+          const copy = new Date(d);
+          copy.setHours(h, m, 0, 0);
+          return copy;
+        };
+
+        if (/\btoday\b/i.test(title)) {
+          due = setTime(now, 18, 0);
+          title = title.replace(/\btoday\b/gi, "").trim();
+        }
+        if (/\btomorrow\b/i.test(title)) {
+          const t = new Date(now);
+          t.setDate(t.getDate() + 1);
+          due = setTime(t, 18, 0);
+          title = title.replace(/\btomorrow\b/gi, "").trim();
+        }
+
+        // next mon/tue/...
+        const weekdays = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+        const mWeek = title.match(
+          /\bnext\s+(sun|mon|tue|wed|thu|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i
+        );
+        if (mWeek) {
+          const target = mWeek[1].slice(0, 3).toLowerCase();
+          const targetIdx = weekdays.indexOf(target);
+          const t = new Date(now);
+          const add = (7 - t.getDay() + targetIdx) % 7 || 7;
+          t.setDate(t.getDate() + add);
+          due = setTime(t, 18, 0);
+          title = title.replace(mWeek[0], "").trim();
+        }
+
+        // in 2d / in 3h
+        const rel = title.match(
+          /\bin\s+(\d+)\s*(d|day|days|h|hr|hour|hours)\b/i
+        );
+        if (rel) {
+          const num = parseInt(rel[1], 10);
+          const unit = rel[2].toLowerCase();
+          const t = new Date(now);
+          if (unit.startsWith("d")) t.setDate(t.getDate() + num);
+          else t.setHours(t.getHours() + num);
+          due = t;
+          title = title.replace(rel[0], "").trim();
+        }
+
+        // at 5pm / 17:30
+        const atTime = title.match(
+          /\b(at\s*)?(\d{1,2})(:(\d{2}))?\s*(am|pm)?\b/i
+        );
+        if (atTime) {
+          let h = parseInt(atTime[2], 10);
+          let m = atTime[4] ? parseInt(atTime[4], 10) : 0;
+          const mer = atTime[5]?.toLowerCase();
+          if (mer) {
+            if (mer === "pm" && h < 12) h += 12;
+            if (mer === "am" && h === 12) h = 0;
+          }
+          const t = due ? new Date(due) : new Date(now);
+          t.setHours(h, m, 0, 0);
+          due = t;
+          title = title.replace(atTime[0], "").trim();
+        }
+
+        // by 20 Aug or 20/08/2025 or 2025-08-20
+        const byDate =
+          title.match(
+            /\bby\s+([0-3]?\d)([\/-])(0?\d|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(?:\2(\d{2,4}))?\b/i
+          ) || title.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
+        if (byDate) {
+          let t;
+          if (byDate[0].includes("-") && /^\d{4}-/.test(byDate[0])) {
+            const [_, Y, M, D] = byDate;
+            t = new Date(Number(Y), Number(M) - 1, Number(D), 18, 0, 0, 0);
+          } else {
+            const d = Number(byDate[1]);
+            const sep = byDate[2];
+            const mRaw = byDate[3];
+            const y = byDate[4]
+              ? Number(byDate[4].length === 2 ? "20" + byDate[4] : byDate[4])
+              : new Date().getFullYear();
+            const months = {
+              jan: 0,
+              feb: 1,
+              mar: 2,
+              apr: 3,
+              may: 4,
+              jun: 5,
+              jul: 6,
+              aug: 7,
+              sep: 8,
+              oct: 9,
+              nov: 10,
+              dec: 11,
+            };
+            const m = /[a-z]/i.test(mRaw)
+              ? months[mRaw.slice(0, 3).toLowerCase()]
+              : Number(mRaw) - 1;
+            t = new Date(y, m, d, 18, 0, 0, 0);
+          }
+          due = t;
+          title = title
+            .replace(byDate[0], "")
+            .replace(/\bby\b/i, "")
+            .trim();
+        }
+
+        // cleanup multiple spaces
+        title = title.replace(/\s{2,}/g, " ").trim();
+
+        if (!title) title = original; // fallback
+
+        return { title, priority, category, due };
+      }
+
+      // ===== Suggestion engine (simple frequency + time-of-day patterns) =====
+      function getSuggestions() {
+        const hist = state.history || [];
+        // Count most common titles (stemmed roughly by lowercasing and stripping punctuation)
+        const counts = new Map();
+        for (const h of hist.slice(-200)) {
+          const key = h.title
+            .toLowerCase()
+            .replace(/[^\p{L}\d\s]/gu, "")
+            .trim();
+          if (!key) continue;
+          counts.set(key, (counts.get(key) || 0) + 1);
+        }
+        const top = Array.from(counts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 6)
+          .map(([t]) => t);
+
+        const now = new Date();
+        const hour = now.getHours();
+        const timeBased =
+          hour < 12
+            ? ["Review notes", "Plan day", "Morning workout"]
+            : hour < 18
+            ? ["Code practice", "Standup prep", "Walk break"]
+            : ["Read 10 pages", "Revise JS", "Plan tomorrow"];
+
+        return [...new Set([...top, ...timeBased])];
+      }
+
+      // ===== Notifications =====
+      async function ensureNotifications() {
+        if (!("Notification" in window)) {
+          alert("Notifications not supported in this browser.");
+          return false;
+        }
+        if (Notification.permission === "granted") return true;
+        if (Notification.permission === "denied") {
+          alert(
+            "Notifications are blocked. Enable them in your browser settings."
+          );
+          return false;
+        }
+        const p = await Notification.requestPermission();
+        return p === "granted";
+      }
+
+      function scheduleNotification(task) {
+        if (
+          !("Notification" in window) ||
+          Notification.permission !== "granted"
+        )
+          return;
+        if (!task.due) return;
+        const when = new Date(task.due).getTime() - Date.now() - 30 * 60 * 1000; // 30 min before
+        if (when <= 0) return;
+        // Use setTimeout while tab is open. For production, use Service Worker (PWA). Here we keep it simple.
+        setTimeout(() => {
+          new Notification("Reminder: " + task.title, {
+            body: "Due at " + new Date(task.due).toLocaleString(),
+          });
+        }, Math.min(when, 2 ** 31 - 1));
+      }
+
+      // ===== Rendering =====
+      function renderCategoryOptions() {
+        const cats = new Set(["general"]);
+        state.tasks.forEach((t) => cats.add(t.category));
+        const sel = $("#filterCategory");
+        const val = sel.value;
+        sel.innerHTML =
+          '<option value="all">Any Category</option>' +
+          Array.from(cats)
+            .map((c) => `<option value="${c}">${c}</option>`)
+            .join("");
+        sel.value = val || "all";
+      }
+
+      function formatMeta(task) {
+        const out = [];
+        out.push(`<span class="pill">${task.category}</span>`);
+        out.push(
+          `<span class="pill ${
+            task.priority === "high"
+              ? "overdue"
+              : task.priority === "low"
+              ? "success"
+              : ""
+          }">pri: ${task.priority}</span>`
+        );
+        if (task.due) {
+          const d = new Date(task.due);
+          const overdue = !task.done && d.getTime() < Date.now();
+          out.push(
+            `<span class="pill deadline ${
+              overdue ? "overdue" : ""
+            }">${d.toLocaleString()}</span>`
+          );
+        }
+        return out.join(" ");
+      }
+
+      function renderList() {
+        const list = $("#taskList");
+        list.innerHTML = "";
+
+        const filters = {
+          status: $("#filterStatus").value,
+          prio: $("#filterPriority").value,
+          cat: $("#filterCategory").value,
+          q: $("#searchBox").value.toLowerCase().trim(),
+        };
+
+        // Sort according to state.order, then by priority, then by due date
+        const orderMap = new Map(state.order.map((id, idx) => [id, idx]));
+        const tasks = [...state.tasks].sort((a, b) => {
+          const oa = orderMap.get(a.id) ?? 9999;
+          const ob = orderMap.get(b.id) ?? 9999;
+          if (oa !== ob) return oa - ob;
+          const p = { high: 0, med: 1, low: 2 };
+          if (p[a.priority] !== p[b.priority])
+            return p[a.priority] - p[b.priority];
+          const da = a.due ? new Date(a.due).getTime() : Infinity;
+          const db = b.due ? new Date(b.due).getTime() : Infinity;
+          return da - db;
+        });
+
+        for (const t of tasks) {
+          if (filters.status === "open" && t.done) continue;
+          if (filters.status === "done" && !t.done) continue;
+          if (filters.prio !== "all" && t.priority !== filters.prio) continue;
+          if (filters.cat !== "all" && t.category !== filters.cat) continue;
+          if (
+            filters.q &&
+            !`${t.title} ${t.category}`.toLowerCase().includes(filters.q)
+          )
+            continue;
+
+          const node = document.importNode($("#taskTemplate").content, true);
+          const root = node.querySelector(".task");
+          root.dataset.id = t.id;
+          root.querySelector(".toggle").checked = !!t.done;
+          root.querySelector(".title").textContent = t.title;
+          root.querySelector(".muted").textContent = t.done
+            ? "Completed"
+            : t.due
+            ? "Due"
+            : "No deadline";
+          root.querySelector(".meta").innerHTML = formatMeta(t);
+
+          root.querySelector(".toggle").addEventListener("change", (e) => {
+            t.done = e.target.checked;
+            if (t.done) onTaskCompleted();
+            save();
+            render();
+          });
+          root.querySelector(".del").addEventListener("click", () => {
+            removeTask(t.id);
+          });
+          root.querySelector(".edit").addEventListener("click", () => {
+            editTaskPrompt(t);
+          });
+
+          // Drag & drop
+          root.addEventListener("dragstart", (e) => {
+            root.classList.add("dragging");
+            e.dataTransfer.setData("text/plain", t.id);
+          });
+          root.addEventListener("dragend", () => {
+            root.classList.remove("dragging");
+          });
+
+          list.appendChild(node);
+        }
+
+        // Make list droppable
+        list.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          const after = getDragAfterElement(list, e.clientY);
+          const dragging = $(".task.dragging");
+          if (!dragging) return;
+          if (after == null) list.appendChild(dragging);
+          else list.insertBefore(dragging, after);
+        });
+        list.addEventListener("drop", () => {
+          state.order = $$(".task", list).map((el) => el.dataset.id);
+          save();
+        });
+
+        renderStats();
+        drawChart();
+      }
+
+      function getDragAfterElement(container, y) {
+        const els = $$(".task:not(.dragging)", container);
+        let closest = { offset: Number.NEGATIVE_INFINITY, element: null };
+        for (const child of els) {
+          const box = child.getBoundingClientRect();
+          const offset = y - box.top - box.height / 2;
+          if (offset < 0 && offset > closest.offset)
+            closest = { offset, element: child };
+        }
+        return closest.element;
+      }
+
+      function renderStats() {
+        const open = state.tasks.filter((t) => !t.done).length;
+        const done = state.tasks.filter((t) => t.done).length;
+        $("#statOpen").textContent = open;
+        $("#statDone").textContent = done;
+        $("#statStreak").textContent = (state.prefs?.streak || 0) + "🔥";
+      }
+
+      function drawChart() {
+        const c = $("#chart");
+        const ctx = c.getContext("2d");
+        const W = (c.width = c.clientWidth * devicePixelRatio);
+        const H = (c.height = c.clientHeight * devicePixelRatio);
+        ctx.clearRect(0, 0, W, H);
+
+        const days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - (6 - i));
+          d.setHours(0, 0, 0, 0);
+          return d;
+        });
+        const counts = days.map(
+          (d) =>
+            state.tasks.filter(
+              (t) =>
+                t.done &&
+                new Date(t.updated || t.created).toDateString() ===
+                  d.toDateString()
+            ).length
+        );
+
+        const pad = 24 * devicePixelRatio;
+        const max = Math.max(1, ...counts);
+        const stepX = (W - pad * 2) / 6;
+        const scaleY = (H - pad * 2) / max;
+
+        // grid
+        ctx.globalAlpha = 0.2;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = 0; i < 7; i++) {
+          const x = pad + i * stepX;
+          ctx.moveTo(x, pad);
+          ctx.lineTo(x, H - pad);
+        }
+        ctx.strokeStyle = "#9aa3c1";
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+
+        // line
+        ctx.beginPath();
+        counts.forEach((v, i) => {
+          const x = pad + i * stepX;
+          const y = H - pad - v * scaleY;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "rgba(108,124,255,0.9)";
+        ctx.stroke();
+
+        // points
+        counts.forEach((v, i) => {
+          const x = pad + i * stepX;
+          const y = H - pad - v * scaleY;
+          ctx.beginPath();
+          ctx.arc(x, y, 4 * devicePixelRatio, 0, Math.PI * 2);
+          ctx.fillStyle = "#12c2e9";
+          ctx.fill();
+        });
+      }
+
+      // ===== Actions =====
+      function addTaskFromInput(text) {
+        const parsed = parseInput(text);
+        const t = {
+          id: uid(),
+          title: parsed.title,
+          priority: parsed.priority,
+          category: parsed.category,
+          due: parsed.due ? new Date(parsed.due).toISOString() : null,
+          done: false,
+          created: new Date().toISOString(),
+          updated: new Date().toISOString(),
+        };
+        state.tasks.push(t);
+        state.order.push(t.id);
+        state.history.push({ title: t.title, at: Date.now() });
+        save();
+        render();
+        scheduleNotification(t);
+      }
+
+      function removeTask(id) {
+        const idx = state.tasks.findIndex((t) => t.id === id);
+        if (idx >= 0) state.tasks.splice(idx, 1);
+        state.order = state.order.filter((x) => x !== id);
+        save();
+        render();
+      }
+
+      function editTaskPrompt(t) {
+        const input = prompt(
+          "Edit task (you can use natural language too):",
+          `${t.title}${
+            t.due ? " by " + new Date(t.due).toLocaleString() : ""
+          } ${t.priority}`
+        );
+        if (!input) return;
+        const p = parseInput(input);
+        t.title = p.title || t.title;
+        t.priority = p.priority || t.priority;
+        t.category = p.category || t.category;
+        t.due = p.due ? new Date(p.due).toISOString() : t.due;
+        t.updated = new Date().toISOString();
+        save();
+        render();
+      }
+
+      function onTaskCompleted() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const last = state.prefs.lastCompleteDay
+          ? new Date(state.prefs.lastCompleteDay)
+          : null;
+        if (!last || today - last === 24 * 60 * 60 * 1000)
+          state.prefs.streak = (state.prefs.streak || 0) + 1;
+        else if (today - last > 24 * 60 * 60 * 1000) state.prefs.streak = 1;
+        state.prefs.lastCompleteDay = today.toISOString();
+      }
+
+      function save() {
+        store.write(state);
+      }
+
+      // ===== Voice =====
+      function startVoice() {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+          alert("Speech Recognition not supported in this browser.");
+          return;
+        }
+        const rec = new SR();
+        rec.lang = "en-US";
+        rec.interimResults = false;
+        rec.maxAlternatives = 1;
+        rec.onresult = (e) => {
+          const text = e.results[0][0].transcript;
+          addTaskFromInput(text);
+        };
+        rec.onerror = (e) => alert("Voice error: " + e.error);
+        rec.start();
+      }
+
+      // ===== Init & Events =====
+      function renderSuggestions() {
+        const box = $("#suggestChips");
+        box.innerHTML = "";
+        for (const s of getSuggestions()) {
+          const chip = document.createElement("button");
+          chip.className = "chip";
+          chip.textContent = s;
+          chip.addEventListener("click", () => addTaskFromInput(s));
+          box.appendChild(chip);
+        }
+      }
+
+      function render() {
+        renderCategoryOptions();
+        renderList();
+        renderSuggestions();
+      }
+
+      $("#addBtn").addEventListener("click", () => {
+        const v = $("#taskInput").value.trim();
+        if (!v) return;
+        addTaskFromInput(v);
+        $("#taskInput").value = "";
+      });
+      $("#taskInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") $("#addBtn").click();
+      });
+
+      $("#filterStatus").addEventListener("change", render);
+      $("#filterPriority").addEventListener("change", render);
+      $("#filterCategory").addEventListener("change", render);
+      $("#searchBox").addEventListener("input", render);
+
+      $("#voiceBtn").addEventListener("click", startVoice);
+      $("#notifyBtn").addEventListener("click", async () => {
+        if (await ensureNotifications()) alert("Notifications enabled ✔");
+      });
+      $("#themeBtn").addEventListener("click", () => {
+        state.prefs.theme = state.prefs.theme === "light" ? "dark" : "light";
+        applyTheme();
+        save();
+      });
+      $("#wipeBtn").addEventListener("click", () => {
+        if (confirm("This will erase all tasks and preferences. Continue?")) {
+          localStorage.removeItem(store.key);
+          location.reload();
+        }
+      });
+
+      // initial schedule for existing tasks
+      (function initSchedule() {
+        for (const t of state.tasks) scheduleNotification(t);
+      })();
+
+      // seed example if empty
+      if (!state.tasks.length) {
+        [
+          "Finish JS project by Fri 6pm high #study",
+          "Buy groceries today low #home",
+          "Read 10 pages in 2h med #habit",
+        ].forEach(addTaskFromInput);
+      }
+
+      render();
+      window.addEventListener("resize", drawChart);
+
+      const calendarContainer = document.createElement("div");
+      calendarContainer.classList.add("calendar-container");
+      document.getElementById("calendar").appendChild(calendarContainer);
+
+      let today = new Date();
+      let month = today.getMonth();
+      let year = today.getFullYear();
+
+      function renderCalendar(month, year) {
+        calendarContainer.innerHTML = "";
+
+        // Header
+        const header = document.createElement("div");
+        header.classList.add("calendar-header");
+
+        const prevBtn = document.createElement("button");
+        prevBtn.textContent = "◀";
+        prevBtn.addEventListener("click", () => {
+          month--;
+          if (month < 0) {
+            month = 11;
+            year--;
+          }
+          renderCalendar(month, year);
+        });
+
+        const monthYear = document.createElement("span");
+        monthYear.textContent = `${new Date(year, month).toLocaleString(
+          "default",
+          { month: "long" }
+        )} ${year}`;
+
+        const nextBtn = document.createElement("button");
+        nextBtn.textContent = "▶";
+        nextBtn.addEventListener("click", () => {
+          month++;
+          if (month > 11) {
+            month = 0;
+            year++;
+          }
+          renderCalendar(month, year);
+        });
+
+        header.appendChild(prevBtn);
+        header.appendChild(monthYear);
+        header.appendChild(nextBtn);
+        calendarContainer.appendChild(header);
+
+        // Days
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+        const currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0);
+
+        for (let i = 0; i < firstDay; i++) {
+          const empty = document.createElement("div");
+          calendarContainer.appendChild(empty);
+        }
+
+        for (let day = 1; day <= lastDate; day++) {
+          const dateElement = document.createElement("div");
+          dateElement.textContent = day;
+          dateElement.classList.add("calendar-day");
+
+          const date = new Date(year, month, day);
+
+          if (date < currentDate) {
+            dateElement.classList.add("disabled");
+          } else {
+            dateElement.addEventListener("click", () => {
+              document.getElementById("taskInput").value = `${
+                document.getElementById("taskInput").value
+              } (Due: ${day}/${month + 1}/${year})`;
+            });
+          }
+
+          calendarContainer.appendChild(dateElement);
+        }
+      }
+
+      renderCalendar(month, year);
+    </script>
+  </body>
+</html>
